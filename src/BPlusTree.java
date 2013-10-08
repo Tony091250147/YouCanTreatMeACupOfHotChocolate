@@ -22,29 +22,34 @@ public class BPlusTree {
 	public static final int D = 2;
 	/*
 	public static void main(String args[]) {
-		try {
-			int primeNumbers[] = new int[] { 2, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14,
-					15, 16 };
+//		try {
+			int primeNumbers[] = new int[] { 2, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
 			BPlusTree tree=new BPlusTree();
 			Utils.bulkInsert(tree, primeNumbers);
 
 			String test=outputTree(tree);
-//			System.out.println(test);
 			String correct="@10/@%%@5/8/@@12/14/@%%[(2,2);(4,4);]#[(5,5);(7,7);]#[(8,8);(9,9);]$[(10,10);(11,11);]#[(12,12);(13,13);]#[(14,14);(15,15);(16,16);]$%%";
-//			test.compareTo(correct);
-//			assertEquals(test, correct);
-//			assertEquals(correct, correct);
-			
+			System.out.println("Search Result"+ tree.search(19));
 		    tree.delete(2);
-		    
+		    tree.delete(4);
+		    tree.delete(5);
+		    tree.delete(7);
+		    tree.delete(8);
+		    tree.delete(9);
+		    tree.delete(10);
+		    tree.delete(11);
+		    tree.delete(12);
+		    tree.delete(13);
+		    tree.delete(14);
+		    tree.delete(15);
+//		    tree.delete(16);
+//		    tree.delete(17);
 		    test=outputTree(tree);
+		    System.out.println(test);
 		    correct="@8/10/12/14/@%%[(4,4);(5,5);(7,7);]#[(8,8);(9,9);]#[(10,10);(11,11);]#[(12,12);(13,13);]#[(14,14);(15,15);(16,16);]$%%";
-		    System.out.print(""+test.compareTo(correct));
-		    System.out.print("");
-//		    assertEquals(test, correct);
-		} catch (Exception e) {
-			System.out.println(""+e);
-		}
+//		} catch (Exception e) {
+//			System.out.println(""+e);
+//		}
 		
 	}
 	
@@ -59,6 +64,7 @@ public class BPlusTree {
 		int nodesInCurrentLevel = 1;
 		int nodesInNextLevel = 0;
 		ArrayList<Integer> childrenPerIndex = new ArrayList<Integer>();
+		
 		queue.add(tree.root);
 		while (!queue.isEmpty()) {
 			Node target = queue.poll();
@@ -101,8 +107,8 @@ public class BPlusTree {
 		return result;
 
 	}
-	*/
 
+	*/
 	/**
 	 * TODO Search the value for a specific key
 	 * 
@@ -122,7 +128,7 @@ public class BPlusTree {
 				}
 				if (childrenIndex == -1)
 				{
-					childrenIndex = curIndexNode.keys.size()+1;
+					childrenIndex = curIndexNode.keys.size();
 				}
 				curIndexNode = ((IndexNode)curIndexNode).children.get(childrenIndex);
 			}
@@ -277,7 +283,9 @@ public class BPlusTree {
 			index.keys.remove(index.keys.size()-1);
 			index.children.remove(index.children.size()-1);
 		}
-				
+		for (Node itrNode : rightIndexNode.children) {
+			itrNode.fatherNode = rightIndexNode;
+		}
 		return new AbstractMap.SimpleEntry<Integer, Node>(halfKey, rightIndexNode);
 
 	}
@@ -321,10 +329,11 @@ public class BPlusTree {
 	
 	private void mergeAfterDelete(Node curNode)
 	{
-		if (curNode.keys.size() < BPlusTree.D) {
+		if (curNode != null && (curNode.keys.size() < BPlusTree.D && curNode != root)) {
 			Node leftNode, rightNode;
 			IndexNode father = (IndexNode)curNode.fatherNode;
 			int curNodeIndex = -1;
+
 			for (int itr = 0; itr < father.children.size(); itr++) {
 				Node itrNode = father.children.get(itr);
 				if (itrNode == curNode) {
@@ -350,13 +359,13 @@ public class BPlusTree {
 			}
 			if (splitKeyPosition != -1)
 			{
-				System.out.println("Before remove"+curNode.fatherNode.keys.size());
 				curNode.fatherNode.keys.remove(splitKeyPosition);
-				System.out.println("After remove"+curNode.fatherNode.keys.size());
 				((IndexNode)curNode.fatherNode).children.remove(splitKeyPosition+1);
-				if (curNode.fatherNode.keys.size() == 0 && curNode.fatherNode == root)
+				if (curNode.fatherNode.keys.size() == 0)
 				{
+					System.out.println("THIS METHOD IS CALLED");
 					root = curNode;
+					curNode.fatherNode = null;
 					return;
 				}
 			}
@@ -395,7 +404,6 @@ public class BPlusTree {
 		}
 		
 		if (left.keys.size()< BPlusTree.D && right.keys.size() > BPlusTree.D+1) {
-//			if (right.keys.size() > BPlusTree.D+1) {
 				left.keys.add(right.keys.get(0));
 				left.values.add(right.values.get(0));
 				int key = right.keys.get(1);
@@ -405,10 +413,8 @@ public class BPlusTree {
 				right.keys.remove(0);
 				right.values.remove(0);
 				splitKeyPosition = -1;
-//			}
 		} else if (right.keys.size() < BPlusTree.D && left.keys.size() > BPlusTree.D+1) {
-//			if (left.keys.size() > BPlusTree.D+1) {
-				int leftLast = left.keys.size();
+				int leftLast = left.keys.size()-1;
 				right.keys.add(0,left.keys.get(leftLast));
 				right.values.add(0, left.values.get(leftLast));
 				int key = left.keys.get(leftLast);
@@ -418,12 +424,9 @@ public class BPlusTree {
 				left.keys.remove(leftLast);
 				left.values.remove(leftLast);
 				splitKeyPosition = -1;
-//			}
 		} else
 		{
-			System.out.println("Before keys:"+left.keys.size());
 			left.keys.addAll(right.keys);
-			System.out.println("After keys:"+left.keys.size());
 			left.values.addAll(right.values);
 		}
 		
@@ -457,42 +460,42 @@ public class BPlusTree {
 		}
 		
 		if (leftIndex.keys.size()< BPlusTree.D && rightIndex.keys.size() > BPlusTree.D+1) {
-//			if (rightIndex.keys.size() > BPlusTree.D+1) {
-				leftIndex.keys.add(rightIndex.keys.get(0));
+				leftIndex.keys.add(leftIndex.fatherNode.keys.get(splitKeyPosition));
+				Node rightChildrenNode = rightIndex.children.get(0);
+				rightChildrenNode.fatherNode = leftIndex;
 				leftIndex.children.add(rightIndex.children.get(0));
-				int key = rightIndex.keys.get(1);
+				int key = rightIndex.keys.get(0);
 				if (splitKeyPosition != -1) {
 					leftIndex.fatherNode.keys.set(splitKeyPosition, key);
 				}
 				rightIndex.keys.remove(0);
+				
 				rightIndex.children.remove(0);
 				splitKeyPosition = -1;
-//			}
 		} else if (rightIndex.keys.size() < BPlusTree.D && leftIndex.keys.size() > BPlusTree.D+1) {
-//			if (leftIndex.keys.size() > BPlusTree.D+1) {
+
 				int leftLast = leftIndex.keys.size();
-				rightIndex.keys.add(0,leftIndex.keys.get(leftLast));
+				Node leftChildrenNode = leftIndex.children.get(leftLast);
+				leftChildrenNode.fatherNode = rightIndex;
+				rightIndex.keys.add(0,leftIndex.fatherNode.keys.get(splitKeyPosition));
 				rightIndex.children.add(0, leftIndex.children.get(leftLast));
-				int key = leftIndex.keys.get(leftLast);
+				int key = leftIndex.keys.get(leftLast-1);
 				if (splitKeyPosition != -1) {
 					leftIndex.fatherNode.keys.set(splitKeyPosition, key);
 				}
-				leftIndex.keys.remove(leftLast);
+				leftIndex.keys.remove(leftLast-1);
 				leftIndex.children.remove(leftLast);
 				splitKeyPosition = -1;
-//			}
 		} else
 		{
 			int splitKey = parent.keys.get(splitKeyPosition);
 			leftIndex.keys.add(splitKey);
-			System.out.println("Before keys:"+leftIndex.keys.size());
 			leftIndex.keys.addAll(rightIndex.keys);
-			System.out.println("Before keys:"+leftIndex.keys.size());
 			leftIndex.children.addAll(rightIndex.children);
+			for (Node nodeItr : rightIndex.children) {
+				nodeItr.fatherNode = leftIndex;
+			}
 		}
-		
-		
-		
 		
 		return splitKeyPosition;
 	}
